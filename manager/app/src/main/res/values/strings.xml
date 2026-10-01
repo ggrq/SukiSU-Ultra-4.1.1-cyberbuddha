@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name" translatable="false">SukiSU Ultra</string>
+    <string name="app_name" translatable="false">KernelSU 电子佛</string>
     <string name="home">Home</string>
     <string name="home_not_installed">Not installed</string>
     <string name="home_click_to_install">Click to install</string>
@@ -498,4 +498,12 @@
     <string name="icon_switch_title">Alternate icon</string>
     <string name="icon_switch_summary">Change the launcher icon to KernelSU\'s icon</string>
     <string name="refresh">Refresh</string>
+    <string name="color_honor_gold">佛光金</string>
+    <string name="color_honor_purple">霓虹紫</string>
+    <string name="color_honor_red">朱砂红</string>
+    <string name="color_honor_pink">莲粉</string>
+    <string name="color_honor_cyan">霓虹青</string>
+    <string name="color_honor_green">霓虹绿</string>
+    <string name="color_honor_blue">霓虹蓝</string>
+    <string name="color_honor_amber">琥珀</string>
 </resources>

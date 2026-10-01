@@ -12,6 +12,9 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -29,6 +32,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
@@ -48,6 +52,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.ui.component.BottomBar
+import com.sukisu.ultra.ui.cyberfx.CyberBuddhaBackground
 import com.sukisu.ultra.ui.kernelFlash.KernelFlashScreen
 import com.sukisu.ultra.ui.navigation3.HandleDeepLink
 import com.sukisu.ultra.ui.navigation3.LocalNavigator
@@ -73,6 +78,7 @@ import com.sukisu.ultra.ui.screen.UmountManagerScreen
 import com.sukisu.ultra.ui.screen.settings.Personalization
 import com.sukisu.ultra.ui.screen.settings.Tools
 import com.sukisu.ultra.ui.susfs.SuSFSConfigScreen
+import com.sukisu.ultra.ui.theme.CyberBuddhaPalette
 import com.sukisu.ultra.ui.theme.KernelSUTheme
 import com.sukisu.ultra.ui.util.install
 import com.sukisu.ultra.ui.webui.WebUIActivity
@@ -93,7 +99,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val context = LocalActivity.current ?: this
             val prefs = context.getSharedPreferences("settings", MODE_PRIVATE)
-            var colorMode by remember { mutableIntStateOf(prefs.getInt("color_mode", 0)) }
+            var colorMode by remember { mutableIntStateOf(prefs.getInt("color_mode", 3)) }
             var keyColorInt by remember { mutableIntStateOf(prefs.getInt("key_color", 0)) }
             val keyColor = remember(keyColorInt) { if (keyColorInt == 0) null else Color(keyColorInt) }
 
@@ -120,7 +126,7 @@ class MainActivity : ComponentActivity() {
 
                 val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
                     when (key) {
-                        "color_mode" -> colorMode = prefs.getInt("color_mode", 0)
+                        "color_mode" -> colorMode = prefs.getInt("color_mode", 3)
                         "key_color" -> keyColorInt = prefs.getInt("key_color", 0)
                     }
                 }
@@ -223,22 +229,32 @@ fun MainScreen() {
     CompositionLocalProvider(
         LocalPagerState provides pagerState,
     ) {
-        Scaffold(
-            bottomBar = {
-                BottomBar(hazeState, hazeStyle)
-            },
-        ) { innerPadding ->
-            HorizontalPager(
-                modifier = Modifier.hazeSource(state = hazeState),
-                state = pagerState,
-                beyondViewportPageCount = 3,
-                userScrollEnabled = userScrollEnabled,
-            ) {
-                when (it) {
-                    0 -> HomePager(navController, innerPadding.calculateBottomPadding())
-                    1 -> SuperUserPager(navController, innerPadding.calculateBottomPadding())
-                    2 -> ModulePager(navController, innerPadding.calculateBottomPadding())
-                    3 -> SettingPager(navController, innerPadding.calculateBottomPadding())
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(CyberBuddhaPalette.Void)
+        ) {
+            // 赛博朋克佛教 · 电子佛龛全屏特效背景
+            CyberBuddhaBackground(
+                modifier = Modifier.align(Alignment.TopCenter)
+            )
+            Scaffold(
+                bottomBar = {
+                    BottomBar(hazeState, hazeStyle)
+                },
+            ) { innerPadding ->
+                HorizontalPager(
+                    modifier = Modifier.hazeSource(state = hazeState),
+                    state = pagerState,
+                    beyondViewportPageCount = 3,
+                    userScrollEnabled = userScrollEnabled,
+                ) {
+                    when (it) {
+                        0 -> HomePager(navController, innerPadding.calculateBottomPadding())
+                        1 -> SuperUserPager(navController, innerPadding.calculateBottomPadding())
+                        2 -> ModulePager(navController, innerPadding.calculateBottomPadding())
+                        3 -> SettingPager(navController, innerPadding.calculateBottomPadding())
+                    }
                 }
             }
         }

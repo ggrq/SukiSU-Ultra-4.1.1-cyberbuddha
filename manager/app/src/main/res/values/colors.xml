@@ -1,4 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="ic_launcher_background">#FFFFFFFF</color>
+    <!-- 赛博朋克佛教主题色 -->
+    <color name="ic_launcher_background">#05060D</color>
+    <color name="cyberbuddha_void">#05060D</color>
+    <color name="cyberbuddha_voidlight">#0D1022</color>
+    <color name="cyberbuddha_gold">#FFC94A</color>
+    <color name="cyberbuddha_violet">#A855F7</color>
+    <color name="cyberbuddha_cinnabar">#E63946</color>
+    <color name="cyberbuddha_window_bg">#05060D</color>
 </resources>

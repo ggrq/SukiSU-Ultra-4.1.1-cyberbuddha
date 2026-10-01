@@ -152,25 +152,25 @@ fun Personalization() {
                     ) {
                         val colorItems = listOf(
                             stringResource(id = R.string.settings_key_color_default),
-                            stringResource(id = R.string.color_blue),
-                            stringResource(id = R.string.color_red),
-                            stringResource(id = R.string.color_green),
-                            stringResource(id = R.string.color_purple),
-                            stringResource(id = R.string.color_orange),
-                            stringResource(id = R.string.color_teal),
-                            stringResource(id = R.string.color_pink),
-                            stringResource(id = R.string.color_brown),
+                            stringResource(id = R.string.color_honor_gold),
+                            stringResource(id = R.string.color_honor_purple),
+                            stringResource(id = R.string.color_honor_red),
+                            stringResource(id = R.string.color_honor_pink),
+                            stringResource(id = R.string.color_honor_cyan),
+                            stringResource(id = R.string.color_honor_green),
+                            stringResource(id = R.string.color_honor_blue),
+                            stringResource(id = R.string.color_honor_amber),
                         )
                         val colorValues = listOf(
                             0,
-                            Color(0xFF1A73E8).toArgb(),
-                            Color(0xFFEA4335).toArgb(),
-                            Color(0xFF34A853).toArgb(),
-                            Color(0xFF9333EA).toArgb(),
-                            Color(0xFFFB8C00).toArgb(),
-                            Color(0xFF009688).toArgb(),
-                            Color(0xFFE91E63).toArgb(),
-                            Color(0xFF795548).toArgb(),
+                            Color(0xFFFFC94A).toArgb(),  // 佛光金
+                            Color(0xFFA855F7).toArgb(),  // 霓虹紫
+                            Color(0xFFE63946).toArgb(),  // 朱砂红
+                            Color(0xFFF472B6).toArgb(),  // 莲粉
+                            Color(0xFF22D3EE).toArgb(),  // 霓虹青
+                            Color(0xFF34D399).toArgb(),  // 霓虹绿
+                            Color(0xFF3B82F6).toArgb(),  // 霓虹蓝
+                            Color(0xFFF59E0B).toArgb(),  // 琥珀
                         )
                         var keyColorIndex by rememberSaveable {
                             mutableIntStateOf(

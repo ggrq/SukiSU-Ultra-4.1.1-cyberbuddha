@@ -117,6 +117,7 @@ import com.sukisu.ultra.ui.component.rememberConfirmDialog
 import com.sukisu.ultra.ui.component.rememberLoadingDialog
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
+import com.sukisu.ultra.ui.theme.CyberBuddhaPalette
 import com.sukisu.ultra.ui.theme.isInDarkTheme
 import com.sukisu.ultra.ui.util.DownloadListener
 import com.sukisu.ultra.ui.util.download
@@ -1085,11 +1086,22 @@ private fun ModuleList(
                     ),
                 contentAlignment = Alignment.Center
             ) {
-                Text(
-                    stringResource(R.string.module_empty),
-                    textAlign = TextAlign.Center,
-                    color = Color.Gray,
-                )
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        "法器空空如也",
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = CyberBuddhaPalette.BuddhaGold,
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        "暂无模块 · 前往仓库请一尊法器",
+                        fontSize = 13.sp,
+                        color = CyberBuddhaPalette.TextMuted,
+                    )
+                }
             }
         }
 

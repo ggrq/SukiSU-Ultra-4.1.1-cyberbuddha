@@ -11,6 +11,9 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,6 +35,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
@@ -43,10 +47,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -71,6 +79,7 @@ import com.sukisu.ultra.ui.component.RebootListPopup
 import com.sukisu.ultra.ui.component.rememberConfirmDialog
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
+import com.sukisu.ultra.ui.theme.CyberBuddhaPalette
 import com.sukisu.ultra.ui.theme.isInDarkTheme
 import com.sukisu.ultra.ui.util.*
 import com.sukisu.ultra.ui.util.module.LatestVersionInfo
@@ -148,6 +157,7 @@ fun HomePager(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
+                    BuddhaShrineCard()
                     if (isManager && Natives.requireNewKernel()) {
                         WarningCard(
                             stringResource(id = R.string.require_kernel_version)
@@ -183,8 +193,6 @@ fun HomePager(
                         UpdateCard(themeMode)
                     }
                     InfoCard()
-                    DonateCard()
-                    LearnMoreCard()
                 }
                 Spacer(Modifier.height(bottomInnerPadding))
             }
@@ -280,6 +288,79 @@ private fun TopBar(
 }
 
 @Composable
+fun BuddhaShrineCard() {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f),
+                shape = RoundedCornerShape(24.dp)
+            ),
+        colors = CardDefaults.defaultColors(
+            color = Color(0xCC0D1022)
+        ),
+        insideMargin = PaddingValues(0.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(168.dp)
+                .clip(RoundedCornerShape(24.dp))
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.buddha_bg),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x6605060D),
+                                Color(0x8C05060D),
+                                Color(0xE605060D)
+                            )
+                        )
+                    )
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 20.dp, vertical = 18.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = "电子佛龛",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = CyberBuddhaPalette.GoldBright,
+                    letterSpacing = 6.sp
+                )
+                Spacer(Modifier.height(8.dp))
+                Text(
+                    text = "赛博佛系 · 内核权限管理器",
+                    fontSize = 13.sp,
+                    color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.95f),
+                    letterSpacing = 2.sp
+                )
+                Spacer(Modifier.height(14.dp))
+                Text(
+                    text = "◇ 观自在 · 得大自在 ◇",
+                    fontSize = 11.sp,
+                    color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.75f),
+                    letterSpacing = 3.sp
+                )
+            }
+        }
+    }
+}
+
+@Composable
 private fun StatusCard(
     kernelVersion: KernelVersion,
     ksuVersion: Int?,
@@ -321,7 +402,7 @@ private fun StatusCard(
                         colors = CardDefaults.defaultColors(
                             color = when {
                                 isDynamicColor -> colorScheme.secondaryContainer
-                                isInDarkTheme(themeMode) -> Color(0xFF1A3825)
+                                isInDarkTheme(themeMode) -> Color(0xCC161B33)
                                 else -> Color(0xFFDFFAE4)
                             }
                         ),
@@ -346,7 +427,7 @@ private fun StatusCard(
                                     tint = if (isDynamicColor) {
                                         colorScheme.primary.copy(alpha = 0.8f)
                                     } else {
-                                        Color(0xFF36D167)
+                                        CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.85f)
                                     },
                                     contentDescription = null
                                 )
@@ -360,14 +441,24 @@ private fun StatusCard(
                                     modifier = Modifier.fillMaxWidth(),
                                     text = workingText,
                                     fontSize = 20.sp,
-                                    fontWeight = FontWeight.SemiBold
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
+                                        CyberBuddhaPalette.GoldBright
+                                    } else {
+                                        colorScheme.onSurface
+                                    }
                                 )
                                 Spacer(Modifier.height(2.dp))
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
                                     text = stringResource(R.string.home_working_version, ksuVersion),
                                     fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium
+                                    fontWeight = FontWeight.Medium,
+                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
+                                        CyberBuddhaPalette.TextSecondary
+                                    } else {
+                                        colorScheme.onSurfaceVariantSummary
+                                    }
                                 )
                             }
                         }
@@ -395,14 +486,22 @@ private fun StatusCard(
                                     text = stringResource(R.string.superuser),
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp,
-                                    color = colorScheme.onSurfaceVariantSummary,
+                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
+                                        CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
+                                    } else {
+                                        colorScheme.onSurfaceVariantSummary
+                                    },
                                 )
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
                                     text = getSuperuserCount().toString(),
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = colorScheme.onSurface,
+                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
+                                        CyberBuddhaPalette.GoldBright
+                                    } else {
+                                        colorScheme.onSurface
+                                    },
                                 )
                             }
                         }
@@ -425,14 +524,22 @@ private fun StatusCard(
                                     text = stringResource(R.string.module),
                                     fontWeight = FontWeight.Medium,
                                     fontSize = 15.sp,
-                                    color = colorScheme.onSurfaceVariantSummary,
+                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
+                                        CyberBuddhaPalette.NeonCyan.copy(alpha = 0.9f)
+                                    } else {
+                                        colorScheme.onSurfaceVariantSummary
+                                    },
                                 )
                                 Text(
                                     modifier = Modifier.fillMaxWidth(),
                                     text = getModuleCount().toString(),
                                     fontSize = 26.sp,
                                     fontWeight = FontWeight.SemiBold,
-                                    color = colorScheme.onSurface,
+                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
+                                        CyberBuddhaPalette.GoldBright
+                                    } else {
+                                        colorScheme.onSurface
+                                    },
                                 )
                             }
                         }
@@ -505,7 +612,7 @@ fun WarningCard(
         colors = CardDefaults.defaultColors(
             color = color ?: when {
                 isDynamicColor -> colorScheme.errorContainer
-                isInDarkTheme(themeMode) -> Color(0XFF310808)
+                isInDarkTheme(themeMode) -> Color(0xCC2A1030)
                 else -> Color(0xFFF8E2E2)
             }
         ),
@@ -523,58 +630,6 @@ fun WarningCard(
                 fontSize = 14.sp
             )
         }
-    }
-}
-
-@Composable
-fun LearnMoreCard() {
-    val uriHandler = LocalUriHandler.current
-    val url = stringResource(R.string.home_learn_kernelsu_url)
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-    ) {
-        BasicComponent(
-            title = stringResource(R.string.home_learn_kernelsu),
-            summary = stringResource(R.string.home_click_to_learn_kernelsu),
-            endActions = {
-                Icon(
-                    imageVector = MiuixIcons.Link,
-                    tint = colorScheme.onSurface,
-                    contentDescription = null
-                )
-            },
-            onClick = {
-                uriHandler.openUri(url)
-            }
-        )
-    }
-}
-
-@Composable
-fun DonateCard() {
-    val uriHandler = LocalUriHandler.current
-
-    Card(
-        modifier = Modifier
-            .fillMaxWidth(),
-    ) {
-        BasicComponent(
-            title = stringResource(R.string.home_support_title),
-            summary = stringResource(R.string.home_support_content),
-            endActions = {
-                Icon(
-                    imageVector = MiuixIcons.Link,
-                    tint = colorScheme.onSurface,
-                    contentDescription = null
-                )
-            },
-            onClick = {
-                uriHandler.openUri("https://patreon.com/weishu")
-            },
-            insideMargin = PaddingValues(18.dp)
-        )
     }
 }
 

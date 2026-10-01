@@ -1,13 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.KernelSU" parent="android:Theme.Material.Light.NoActionBar">
+    <!-- 赛博朋克佛教主题：虚空黑底色 + 佛光金点缀 -->
+    <style name="Theme.KernelSU" parent="android:Theme.Material.NoActionBar">
         <item name="android:windowLayoutInDisplayCutoutMode" tools:targetApi="o_mr1">shortEdges</item>
+        <item name="android:windowBackground">@color/cyberbuddha_window_bg</item>
+        <item name="android:colorAccent">@color/cyberbuddha_gold</item>
+        <item name="android:navigationBarColor">@color/cyberbuddha_void</item>
+        <item name="android:statusBarColor">@color/cyberbuddha_void</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
     <style name="Theme.KernelSU.WebUI" parent="Theme.KernelSU">
-        <item name="android:windowLightStatusBar">true</item>
-        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">true</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="o_mr1">false</item>
+        <item name="android:windowLightNavigationBar" tools:targetApi="o_mr1">false</item>
     </style>
 
 </resources>

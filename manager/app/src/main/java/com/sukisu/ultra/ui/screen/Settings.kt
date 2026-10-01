@@ -2,6 +2,7 @@ package com.sukisu.ultra.ui.screen
 
 import android.content.Context
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides

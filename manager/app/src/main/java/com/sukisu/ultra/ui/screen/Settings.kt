@@ -106,8 +106,9 @@ fun SettingPager(
     val isKpmAvailable = rememberKpmAvailable()
 
     CyberBackdrop {
-Scaffold(containerColor = Color.Transparent,
-        topBar = {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -132,7 +133,6 @@ Scaffold(containerColor = Color.Transparent,
                     color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
                 )
             }
-        }
         },
         popupHost = { },
         contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)
@@ -596,6 +596,7 @@ colors = CardDefaults.defaultColors(
                 Spacer(Modifier.height(bottomInnerPadding))
             }
         }
+    }
     }
 }
 

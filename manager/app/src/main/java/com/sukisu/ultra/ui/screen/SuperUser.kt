@@ -153,8 +153,9 @@ fun SuperUserPager(
     )
 
     CyberBackdrop {
-Scaffold(containerColor = Color.Transparent,
-        topBar = {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -231,7 +232,6 @@ Scaffold(containerColor = Color.Transparent,
                     }
                 }
             }
-        }
         },
         popupHost = {
             val filteredApps = remember(viewModel.appList.value) {
@@ -414,6 +414,7 @@ Scaffold(containerColor = Color.Transparent,
                 }
             }
         }
+    }
     }
 }
 

@@ -46,11 +46,13 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.Code
@@ -100,6 +102,7 @@ import com.kyant.capsule.ContinuousRoundedRectangle
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -133,6 +136,7 @@ import com.sukisu.ultra.ui.viewmodel.ModuleViewModel
 import com.sukisu.ultra.ui.webui.WebUIActivity
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
@@ -552,85 +556,121 @@ fun ModulePager(
 
     Scaffold(
         topBar = {
-            searchStatus.TopAppBarAnim(hazeState = hazeState, hazeStyle = hazeStyle) {
-                TopAppBar(
-                    color = Color.Transparent,
-                    title = stringResource(R.string.module),
-                    actions = {
-                        val showTopPopup = remember { mutableStateOf(false) }
-                        SuperListPopup(
-                            show = showTopPopup,
-                            popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
-                            alignment = PopupPositionProvider.Align.TopEnd,
-                            onDismissRequest = {
-                                showTopPopup.value = false
-                            }
-                        ) {
-                            ListPopupColumn {
-                                DropdownImpl(
-                                    text = stringResource(R.string.module_sort_action_first),
-                                    optionSize = 2,
-                                    isSelected = viewModel.sortActionFirst,
-                                    onSelectedIndexChange = {
-                                        viewModel.sortActionFirst = !viewModel.sortActionFirst
-                                        prefs.edit {
-                                            putBoolean("module_sort_action_first", viewModel.sortActionFirst)
-                                        }
-                                        scope.launch {
-                                            viewModel.fetchModuleList()
-                                        }
-                                        showTopPopup.value = false
-                                    },
-                                    index = 0
-                                )
-                                DropdownImpl(
-                                    text = stringResource(R.string.module_sort_enabled_first),
-                                    optionSize = 2,
-                                    isSelected = viewModel.sortEnabledFirst,
-                                    onSelectedIndexChange = {
-                                        viewModel.sortEnabledFirst = !viewModel.sortEnabledFirst
-                                        prefs.edit {
-                                            putBoolean("module_sort_enabled_first", viewModel.sortEnabledFirst)
-                                        }
-                                        scope.launch {
-                                            viewModel.fetchModuleList()
-                                        }
-                                        showTopPopup.value = false
-                                    },
-                                    index = 1
-                                )
-                            }
-                        }
-                        IconButton(
-                            modifier = Modifier.padding(end = 8.dp),
-                            onClick = { showTopPopup.value = true },
-                            holdDownState = showTopPopup.value
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.MoreCircle,
-                                tint = colorScheme.onSurface,
-                                contentDescription = null
-                            )
-                        }
-                        RebootListPopup(
-                            modifier = Modifier.padding(end = 16.dp),
-                            alignment = PopupPositionProvider.Align.TopEnd,
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .hazeEffect(hazeState) {
+                        style = hazeStyle
+                        blurRadius = 30.dp
+                        noiseFactor = 0f
+                    }
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    // 左侧：模块仓库
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(CyberBuddhaPalette.NeonCyan.copy(alpha = 0.1f))
+                            .border(1.dp, CyberBuddhaPalette.NeonCyan.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                            .clickable { navigator.push(Route.ModuleRepo) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.Download,
+                            tint = CyberBuddhaPalette.NeonCyan,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
                         )
-                    },
-                    navigationIcon = {
-                        IconButton(
-                            modifier = Modifier.padding(start = 16.dp),
-                            onClick = { navigator.push(Route.ModuleRepo) },
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.Download,
-                                tint = colorScheme.onSurface,
-                                contentDescription = null
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "藏经阁",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 6.sp,
+                            color = CyberBuddhaPalette.GoldBright
+                        )
+                        Text(
+                            text = "法器 · 模块管理",
+                            fontSize = 11.sp,
+                            letterSpacing = 1.sp,
+                            color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
+                        )
+                    }
+                    // 排序菜单
+                    val showTopPopup = remember { mutableStateOf(false) }
+                    SuperListPopup(
+                        show = showTopPopup,
+                        popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
+                        alignment = PopupPositionProvider.Align.TopEnd,
+                        onDismissRequest = {
+                            showTopPopup.value = false
+                        }
+                    ) {
+                        ListPopupColumn {
+                            DropdownImpl(
+                                text = stringResource(R.string.module_sort_action_first),
+                                optionSize = 2,
+                                isSelected = viewModel.sortActionFirst,
+                                onSelectedIndexChange = {
+                                    viewModel.sortActionFirst = !viewModel.sortActionFirst
+                                    prefs.edit {
+                                        putBoolean("module_sort_action_first", viewModel.sortActionFirst)
+                                    }
+                                    scope.launch {
+                                        viewModel.fetchModuleList()
+                                    }
+                                    showTopPopup.value = false
+                                },
+                                index = 0
+                            )
+                            DropdownImpl(
+                                text = stringResource(R.string.module_sort_enabled_first),
+                                optionSize = 2,
+                                isSelected = viewModel.sortEnabledFirst,
+                                onSelectedIndexChange = {
+                                    viewModel.sortEnabledFirst = !viewModel.sortEnabledFirst
+                                    prefs.edit {
+                                        putBoolean("module_sort_enabled_first", viewModel.sortEnabledFirst)
+                                    }
+                                    scope.launch {
+                                        viewModel.fetchModuleList()
+                                    }
+                                    showTopPopup.value = false
+                                },
+                                index = 1
                             )
                         }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.1f))
+                            .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                            .clickable { showTopPopup.value = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.MoreCircle,
+                            tint = CyberBuddhaPalette.GoldBright,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(Modifier.width(8.dp))
+                    RebootListPopup(
+                        modifier = Modifier.padding(0.dp),
+                        alignment = PopupPositionProvider.Align.TopEnd,
+                    )
+                }
             }
         },
         floatingActionButton = {
@@ -1231,9 +1271,9 @@ fun ModuleItem(
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val isDark = isInDarkTheme(prefs.getInt("color_mode", 0))
     val secondaryContainer = colorScheme.secondaryContainer.copy(alpha = 0.8f)
-    val actionIconTint = colorScheme.onSurface.copy(alpha = if (isDark) 0.7f else 0.9f)
-    val updateBg = colorScheme.tertiaryContainer.copy(alpha = 0.6f)
-    val updateTint = colorScheme.onTertiaryContainer.copy(alpha = 0.8f)
+    val actionIconTint = CyberBuddhaPalette.TextSecondary.copy(alpha = if (isDark) 0.9f else 1f)
+    val updateBg = Color(0xFF3A2E0F)
+    val updateTint = CyberBuddhaPalette.GoldBright
     val hasUpdate by remember(updateUrl) { derivedStateOf { updateUrl.isNotEmpty() } }
     val textDecoration by remember(module.remove) {
         mutableStateOf(if (module.remove) TextDecoration.LineThrough else null)
@@ -1246,8 +1286,20 @@ fun ModuleItem(
     Card(
         modifier = Modifier
             .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .padding(bottom = 12.dp)
+            .border(
+                width = 1.dp,
+                color = if (module.enabled) {
+                    CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f)
+                } else {
+                    CyberBuddhaPalette.NeonViolet.copy(alpha = 0.18f)
+                },
+                shape = RoundedCornerShape(22.dp)
+            ),
         insideMargin = PaddingValues(16.dp),
+        colors = CardDefaults.defaultColors(
+            color = Color(0xB30D1022)
+        ),
         onClick = {
             if (hasDescription) expanded = !expanded
         }
@@ -1291,7 +1343,7 @@ fun ModuleItem(
                             text = module.name,
                             fontSize = 17.sp,
                             fontWeight = FontWeight(550),
-                            color = colorScheme.onSurface,
+                            color = if (module.enabled) CyberBuddhaPalette.GoldBright else CyberBuddhaPalette.TextPrimary,
                             textDecoration = textDecoration,
                             onTextLayout = { nameTextLayout = it }
                         )
@@ -1314,7 +1366,7 @@ fun ModuleItem(
                     fontSize = 12.sp,
                     modifier = Modifier.padding(top = 2.dp),
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = CyberBuddhaPalette.TextSecondary,
                     textDecoration = textDecoration
                 )
                 Text(
@@ -1322,7 +1374,7 @@ fun ModuleItem(
                     fontSize = 12.sp,
                     modifier = Modifier.padding(bottom = 1.dp),
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = CyberBuddhaPalette.TextSecondary,
                     textDecoration = textDecoration
                 )
             }
@@ -1349,7 +1401,7 @@ fun ModuleItem(
                 Text(
                     text = module.description,
                     fontSize = 14.sp,
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = CyberBuddhaPalette.TextSecondary,
                     overflow = if (expanded) TextOverflow.Clip else TextOverflow.Ellipsis,
                     maxLines = if (expanded) Int.MAX_VALUE else 4,
                     textDecoration = textDecoration

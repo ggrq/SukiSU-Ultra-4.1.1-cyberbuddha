@@ -18,6 +18,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -36,11 +37,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
 import androidx.compose.material.icons.rounded.Extension
+import androidx.compose.material.icons.rounded.PowerSettingsNew
 import androidx.compose.material.icons.rounded.Security
 import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -67,7 +70,6 @@ import com.sukisu.ultra.R
 import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ui.LocalPagerState
 import com.sukisu.ultra.ui.component.DropdownItem
-import com.sukisu.ultra.ui.component.RebootListPopup
 import com.sukisu.ultra.ui.component.rememberConfirmDialog
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
@@ -240,15 +242,6 @@ private fun BuddhaAltar(
                 )
                 .padding(vertical = 26.dp)
         ) {
-            // 右上角重启菜单
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(10.dp)
-            ) {
-                RebootListPopup()
-            }
-
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -349,6 +342,37 @@ private fun BuddhaAltar(
                         tint = CyberBuddhaPalette.GoldBright.copy(alpha = 0.6f + 0.4f * haloAlpha),
                         modifier = Modifier.size(64.dp)
                     )
+                }
+
+                // 双环法印：左重启 / 右装藏
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(28.dp),
+                    modifier = Modifier.padding(top = 6.dp)
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        RebootRingButton()
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = stringResource(R.string.reboot),
+                            fontSize = 10.sp,
+                            color = CyberBuddhaPalette.TextMuted
+                        )
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        RingButton(
+                            icon = Icons.Rounded.Spa,
+                            tint = CyberBuddhaPalette.NeonViolet,
+                            borderColor = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.5f),
+                            onClick = onClickInstall
+                        )
+                        Spacer(Modifier.height(4.dp))
+                        Text(
+                            text = "装藏",
+                            fontSize = 10.sp,
+                            color = CyberBuddhaPalette.TextMuted
+                        )
+                    }
                 }
 
                 Spacer(Modifier.height(12.dp))
@@ -700,6 +724,90 @@ private fun rememberSusfsInfo(
             }
         }.getOrElse {
             SusfsInfoState(status = SusfsStatus.Error)
+        }
+    }
+}
+
+/** 金环法印按钮：圆形金描边 + 图标 */
+@Composable
+private fun RingButton(
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    tint: Color,
+    borderColor: Color,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .size(46.dp)
+            .clip(RoundedCornerShape(50))
+            .background(tint.copy(alpha = 0.1f))
+            .border(1.dp, borderColor, RoundedCornerShape(50))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = icon,
+            contentDescription = null,
+            tint = tint,
+            modifier = Modifier.size(22.dp)
+        )
+    }
+}
+
+/** 重启法印按钮：莲花左侧金环，点击弹出重启菜单 */
+@Composable
+private fun RebootRingButton() {
+    val showTopPopup = remember { mutableStateOf(false) }
+    Box(
+        modifier = Modifier
+            .size(46.dp)
+            .clip(RoundedCornerShape(50))
+            .background(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.12f))
+            .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.5f), RoundedCornerShape(50))
+            .clickable { showTopPopup.value = true },
+        contentAlignment = Alignment.Center
+    ) {
+        Icon(
+            imageVector = Icons.Rounded.PowerSettingsNew,
+            contentDescription = stringResource(R.string.reboot),
+            tint = CyberBuddhaPalette.GoldBright,
+            modifier = Modifier.size(22.dp)
+        )
+    }
+    top.yukonga.miuix.kmp.extra.SuperListPopup(
+        show = showTopPopup,
+        popupPositionProvider = top.yukonga.miuix.kmp.basic.ListPopupDefaults.ContextMenuPositionProvider,
+        alignment = top.yukonga.miuix.kmp.basic.PopupPositionProvider.Align.TopEnd,
+        onDismissRequest = {
+            showTopPopup.value = false
+        }
+    ) {
+        val pm = LocalContext.current.getSystemService(Context.POWER_SERVICE) as android.os.PowerManager?
+        @Suppress("DEPRECATION")
+        val isRebootingUserspaceSupported =
+            android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R
+                    && pm?.isRebootingUserspaceSupported == true
+
+        top.yukonga.miuix.kmp.basic.ListPopupColumn {
+            val rebootOptions = mutableListOf(
+                Pair(R.string.reboot, ""),
+                Pair(R.string.reboot_recovery, "recovery"),
+                Pair(R.string.reboot_bootloader, "bootloader"),
+                Pair(R.string.reboot_download, "download"),
+                Pair(R.string.reboot_edl, "edl")
+            )
+            if (isRebootingUserspaceSupported) {
+                rebootOptions.add(1, Pair(R.string.reboot_userspace, "userspace"))
+            }
+            rebootOptions.forEachIndexed { idx, (id, reason) ->
+                RebootDropdownItem(
+                    id = id,
+                    reason = reason,
+                    showTopPopup = showTopPopup,
+                    optionSize = rebootOptions.size,
+                    index = idx
+                )
+            }
         }
     }
 }

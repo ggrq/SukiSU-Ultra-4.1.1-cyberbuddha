@@ -10,6 +10,8 @@ import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +37,7 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.LaunchedEffect
@@ -66,6 +69,7 @@ import com.kyant.capsule.ContinuousRoundedRectangle
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
 import dev.chrisbanes.haze.HazeTint
+import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -77,12 +81,14 @@ import com.sukisu.ultra.ui.component.SearchBox
 import com.sukisu.ultra.ui.component.SearchPager
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
+import com.sukisu.ultra.ui.theme.CyberBuddhaPalette
 import com.sukisu.ultra.ui.theme.isInDarkTheme
 import com.sukisu.ultra.ui.util.ownerNameForUid
 import com.sukisu.ultra.ui.util.pickPrimary
 import com.sukisu.ultra.ui.viewmodel.SuperUserViewModel
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownImpl
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -146,55 +152,81 @@ fun SuperUserPager(
 
     Scaffold(
         topBar = {
-            searchStatus.TopAppBarAnim(hazeState = hazeState, hazeStyle = hazeStyle) {
-                TopAppBar(
-                    color = Color.Transparent,
-                    title = stringResource(R.string.superuser),
-                    actions = {
-                        val showTopPopup = remember { mutableStateOf(false) }
-                        SuperListPopup(
-                            show = showTopPopup,
-                            popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
-                            alignment = PopupPositionProvider.Align.TopEnd,
-                            onDismissRequest = {
-                                showTopPopup.value = false
-                            }
-                        ) {
-                            ListPopupColumn {
-                                DropdownImpl(
-                                    text = stringResource(R.string.show_system_apps),
-                                    isSelected = viewModel.showSystemApps,
-                                    optionSize = 1,
-                                    onSelectedIndexChange = {
-                                        viewModel.showSystemApps = !viewModel.showSystemApps
-                                        prefs.edit {
-                                            putBoolean("show_system_apps", viewModel.showSystemApps)
-                                        }
-                                        scope.launch {
-                                            viewModel.loadAppList()
-                                        }
-                                        showTopPopup.value = false
-                                    },
-                                    index = 0
-                                )
-                            }
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .hazeEffect(hazeState) {
+                        style = hazeStyle
+                        blurRadius = 30.dp
+                        noiseFactor = 0f
+                    }
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(
+                        modifier = Modifier.weight(1f)
+                    ) {
+                        Text(
+                            text = "度众生",
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            letterSpacing = 6.sp,
+                            color = CyberBuddhaPalette.GoldBright
+                        )
+                        Text(
+                            text = "金刚殿 · 超级用户授权",
+                            fontSize = 11.sp,
+                            letterSpacing = 1.sp,
+                            color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
+                        )
+                    }
+                    val showTopPopup = remember { mutableStateOf(false) }
+                    SuperListPopup(
+                        show = showTopPopup,
+                        popupPositionProvider = ListPopupDefaults.ContextMenuPositionProvider,
+                        alignment = PopupPositionProvider.Align.TopEnd,
+                        onDismissRequest = {
+                            showTopPopup.value = false
                         }
-                        IconButton(
-                            modifier = Modifier.padding(end = 16.dp),
-                            onClick = {
-                                showTopPopup.value = true
-                            },
-                            holdDownState = showTopPopup.value
-                        ) {
-                            Icon(
-                                imageVector = MiuixIcons.MoreCircle,
-                                tint = colorScheme.onSurface,
-                                contentDescription = null
+                    ) {
+                        ListPopupColumn {
+                            DropdownImpl(
+                                text = stringResource(R.string.show_system_apps),
+                                isSelected = viewModel.showSystemApps,
+                                optionSize = 1,
+                                onSelectedIndexChange = {
+                                    viewModel.showSystemApps = !viewModel.showSystemApps
+                                    prefs.edit {
+                                        putBoolean("show_system_apps", viewModel.showSystemApps)
+                                    }
+                                    scope.launch {
+                                        viewModel.loadAppList()
+                                    }
+                                    showTopPopup.value = false
+                                },
+                                index = 0
                             )
                         }
-                    },
-                    scrollBehavior = scrollBehavior
-                )
+                    }
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.1f))
+                            .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f), RoundedCornerShape(14.dp))
+                            .clickable { showTopPopup.value = true },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = MiuixIcons.MoreCircle,
+                            tint = CyberBuddhaPalette.GoldBright,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
         },
         popupHost = {
@@ -399,6 +431,10 @@ private fun SimpleAppItem(
         Card(
             modifier = Modifier
                 .padding(start = 6.dp, end = 12.dp, bottom = 6.dp)
+                .border(1.dp, CyberBuddhaPalette.NeonViolet.copy(alpha = 0.2f), RoundedCornerShape(18.dp)),
+            colors = CardDefaults.defaultColors(
+                color = Color(0xB30D1022)
+            ),
         ) {
             BasicComponent(
                 title = app.label,
@@ -487,16 +523,12 @@ private fun GroupItem(
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val isDark = isInDarkTheme(prefs.getInt("color_mode", 0))
     val colorScheme = colorScheme
-    val bg = remember(colorScheme) { colorScheme.secondaryContainer.copy(alpha = 0.8f) }
-    val rootBg = remember(colorScheme) { colorScheme.tertiaryContainer.copy(alpha = 0.6f) }
-    val unmountBg = remember(isDark, colorScheme) {
-        if (isDark) Color.White.copy(alpha = 0.4f) else Color.Black.copy(alpha = 0.3f)
-    }
-    val fg = remember(colorScheme) { colorScheme.onSecondaryContainer }
-    val rootFg = remember(colorScheme) { colorScheme.onTertiaryContainer.copy(alpha = 0.8f) }
-    val unmountFg = remember(isDark, colorScheme) {
-        if (isDark) Color.Black.copy(alpha = 0.4f) else Color.White.copy(alpha = 0.8f)
-    }
+    val bg = remember { Color(0xFF221D3A) }
+    val rootBg = remember { Color(0xFF3A2E0F) }
+    val unmountBg = remember { Color(0xFF0E2E2A) }
+    val fg = remember { CyberBuddhaPalette.NeonViolet.copy(alpha = 0.95f) }
+    val rootFg = remember { CyberBuddhaPalette.GoldBright }
+    val unmountFg = remember { CyberBuddhaPalette.NeonCyan }
     val userId = group.uid / 100000
     val packageInfo = group.primary.packageInfo
     val applicationInfo = packageInfo.applicationInfo
@@ -516,23 +548,52 @@ private fun GroupItem(
     Card(
         modifier = Modifier
             .padding(horizontal = 12.dp)
-            .padding(bottom = 12.dp),
+            .padding(bottom = 12.dp)
+            .border(
+                width = 1.dp,
+                color = if (group.anyAllowSu) {
+                    CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.45f)
+                } else {
+                    CyberBuddhaPalette.NeonViolet.copy(alpha = 0.2f)
+                },
+                shape = RoundedCornerShape(22.dp)
+            ),
         onClick = onClickPrimary,
         onLongPress = if (group.apps.size > 1) onToggleExpand else null,
         pressFeedbackType = PressFeedbackType.Sink,
         showIndication = true,
+        colors = CardDefaults.defaultColors(
+            color = Color(0xB30D1022)
+        ),
         insideMargin = PaddingValues(vertical = 8.dp, horizontal = 16.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically
         ) {
-            AppIconImage(
-                packageInfo = group.primary.packageInfo,
-                label = group.primary.label,
+            // 图标金环
+            Box(
                 modifier = Modifier
                     .padding(end = 12.dp)
-                    .size(46.dp)
-            )
+                    .size(54.dp)
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.1f))
+                    .border(
+                        1.dp,
+                        if (group.anyAllowSu) {
+                            CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.5f)
+                        } else {
+                            CyberBuddhaPalette.NeonViolet.copy(alpha = 0.3f)
+                        },
+                        RoundedCornerShape(16.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                AppIconImage(
+                    packageInfo = group.primary.packageInfo,
+                    label = group.primary.label,
+                    modifier = Modifier.size(40.dp)
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f),
@@ -541,7 +602,7 @@ private fun GroupItem(
                     text = if (group.apps.size > 1) ownerNameForUid(group.uid) else group.primary.label,
                     modifier = Modifier.basicMarquee(),
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurface,
+                    color = if (group.anyAllowSu) CyberBuddhaPalette.GoldBright else CyberBuddhaPalette.TextPrimary,
                     maxLines = 1,
                     softWrap = false
                 )
@@ -555,7 +616,7 @@ private fun GroupItem(
                         .basicMarquee(),
                     fontSize = 12.sp,
                     fontWeight = FontWeight(550),
-                    color = colorScheme.onSurfaceVariantSummary,
+                    color = CyberBuddhaPalette.TextMuted,
                     maxLines = 1,
                     softWrap = false
                 )
@@ -583,7 +644,7 @@ private fun GroupItem(
                     .size(width = 10.dp, height = 16.dp),
                 imageVector = MiuixIcons.Basic.ArrowRight,
                 contentDescription = null,
-                colorFilter = ColorFilter.tint(colorScheme.onSurfaceVariantActions),
+                colorFilter = ColorFilter.tint(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.6f)),
             )
         }
     }

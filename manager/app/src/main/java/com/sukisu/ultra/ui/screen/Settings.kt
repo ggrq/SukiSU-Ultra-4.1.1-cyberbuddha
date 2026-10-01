@@ -1,6 +1,7 @@
 package com.sukisu.ultra.ui.screen
 
 import android.content.Context
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.rounded.Palette
 import androidx.compose.material.icons.Icons
@@ -46,8 +48,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.edit
 import dev.chrisbanes.haze.HazeState
 import dev.chrisbanes.haze.HazeStyle
@@ -62,15 +66,18 @@ import com.sukisu.ultra.ui.component.UninstallDialog
 import com.sukisu.ultra.ui.component.rememberLoadingDialog
 import com.sukisu.ultra.ui.navigation3.Navigator
 import com.sukisu.ultra.ui.navigation3.Route
+import com.sukisu.ultra.ui.theme.CyberBuddhaPalette
 import com.sukisu.ultra.ui.util.execKsud
 import com.sukisu.ultra.ui.util.getFeatureStatus
 import com.sukisu.ultra.ui.util.rememberKpmAvailable
 import com.sukisu.ultra.ui.util.getFeaturePersistValue
 import com.sukisu.ultra.ui.util.getSuSFSStatus
 import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.extra.SuperArrow
 import top.yukonga.miuix.kmp.extra.SuperDropdown
@@ -99,16 +106,30 @@ fun SettingPager(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                modifier = Modifier.hazeEffect(hazeState) {
-                    style = hazeStyle
-                    blurRadius = 30.dp
-                    noiseFactor = 0f
-                },
-                color = Color.Transparent,
-                title = stringResource(R.string.settings),
-                scrollBehavior = scrollBehavior
-            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .hazeEffect(hazeState) {
+                        style = hazeStyle
+                        blurRadius = 30.dp
+                        noiseFactor = 0f
+                    }
+                    .padding(horizontal = 20.dp, vertical = 12.dp)
+            ) {
+                Text(
+                    text = "禅房",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 6.sp,
+                    color = CyberBuddhaPalette.GoldBright
+                )
+                Text(
+                    text = "修持 · 设置与法门",
+                    fontSize = 11.sp,
+                    letterSpacing = 1.sp,
+                    color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
+                )
+            }
         },
         popupHost = { },
         contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)
@@ -141,7 +162,11 @@ fun SettingPager(
                 Card(
                     modifier = Modifier
                         .padding(top = 12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                            color = Color(0xB30D1022)
+                        ),
                 ) {
                     SuperSwitch(
                         title = stringResource(id = R.string.settings_check_update),
@@ -191,7 +216,11 @@ fun SettingPager(
                 Card(
                     modifier = Modifier
                         .padding(top = 12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                            color = Color(0xB30D1022)
+                        ),
                 ) {
                     val personalization = stringResource(id = R.string.personalization)
                     SuperArrow(
@@ -216,7 +245,11 @@ fun SettingPager(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                                color = Color(0xB30D1022)
+                            ),
                     ) {
                         SuperArrow(
                             title = toolsTitle,
@@ -240,7 +273,11 @@ fun SettingPager(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                                color = Color(0xB30D1022)
+                            ),
                     ) {
                         val profileTemplate = stringResource(id = R.string.settings_profile_template)
                         SuperArrow(
@@ -265,7 +302,11 @@ fun SettingPager(
                     Card(
                         modifier = Modifier
                             .padding(top = 12.dp)
-                            .fillMaxWidth(),
+                            .fillMaxWidth()
+                            .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                                color = Color(0xB30D1022)
+                            ),
                     ) {
                         val kpmTitle = stringResource(id = R.string.kpm_title)
                         SuperArrow(
@@ -292,7 +333,11 @@ fun SettingPager(
                         Card(
                             modifier = Modifier
                                 .padding(top = 12.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                                    color = Color(0xB30D1022)
+                                ),
                         ) {
                             val susfsTitle = stringResource(id = R.string.susfs_config_title)
                             SuperArrow(
@@ -465,7 +510,11 @@ fun SettingPager(
                         Card(
                             modifier = Modifier
                                 .padding(top = 12.dp)
-                                .fillMaxWidth(),
+                                .fillMaxWidth()
+                                .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                                    color = Color(0xB30D1022)
+                                ),
                         ) {
                             val uninstall = stringResource(id = R.string.settings_uninstall)
                             SuperArrow(
@@ -490,7 +539,11 @@ fun SettingPager(
                 Card(
                     modifier = Modifier
                         .padding(vertical = 12.dp)
-                        .fillMaxWidth(),
+                        .fillMaxWidth()
+                        .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.22f), RoundedCornerShape(20.dp)),
+colors = CardDefaults.defaultColors(
+                            color = Color(0xB30D1022)
+                        ),
                 ) {
                     SuperArrow(
                         title = stringResource(id = R.string.settings_view_sulog),

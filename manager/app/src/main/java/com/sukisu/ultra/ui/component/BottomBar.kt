@@ -85,7 +85,9 @@ fun BottomBar(
                 .background(Color(0xE60D1022))
                 .border(
                     width = 1.dp,
-                    color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f),
+                    brush = androidx.compose.ui.graphics.Brush.linearGradient(
+                        colors = CyberBuddhaPalette.goldGradient()
+                    ),
                     shape = RoundedCornerShape(28.dp)
                 )
                 .padding(horizontal = 10.dp, vertical = 10.dp),
@@ -110,6 +112,11 @@ fun BottomBar(
                         .background(
                             CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.14f * bgAlpha)
                         )
+                        .border(
+                            width = 1.dp,
+                            color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.5f * bgAlpha),
+                            shape = RoundedCornerShape(20.dp)
+                        )
                         .clickable {
                             coroutineScope.launch {
                                 pageState.animateScrollToPage(
@@ -121,12 +128,32 @@ fun BottomBar(
                         .padding(horizontal = 16.dp, vertical = 7.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Icon(
-                        imageVector = destination.icon,
-                        contentDescription = stringResource(destination.label),
-                        tint = tint,
-                        modifier = Modifier.size(22.dp)
-                    )
+                    Box(
+                        modifier = Modifier.size(width = 22.dp, height = 22.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        // 选中光晕
+                        if (selected) {
+                            Box(
+                                modifier = Modifier
+                                    .size(30.dp)
+                                    .background(
+                                        Brush.radialGradient(
+                                            colors = listOf(
+                                                CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f),
+                                                Color.Transparent
+                                            )
+                                        )
+                                    )
+                            )
+                        }
+                        Icon(
+                            imageVector = destination.icon,
+                            contentDescription = stringResource(destination.label),
+                            tint = tint,
+                            modifier = Modifier.size(22.dp)
+                        )
+                    }
                     Spacer(Modifier.height(3.dp))
                     Text(
                         text = stringResource(destination.label),

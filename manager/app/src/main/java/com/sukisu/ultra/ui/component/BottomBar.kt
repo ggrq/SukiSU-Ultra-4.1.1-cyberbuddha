@@ -2,8 +2,8 @@ package com.sukisu.ultra.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border

@@ -101,7 +101,7 @@ fun BottomBar(
                 )
                 val bgAlpha by animateFloatAsState(
                     targetValue = if (selected) 1f else 0f,
-                    animationSpec = tween(durationMillis = 260, easing = EaseInOut),
+                    animationSpec = tween<Float>(durationMillis = 260, easing = EaseInOut),
                     label = "navBg"
                 )
                 Column(

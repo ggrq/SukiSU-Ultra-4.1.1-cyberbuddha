@@ -6,39 +6,38 @@ import android.system.Os
 import androidx.annotation.StringRes
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.EaseInOut
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.add
-import androidx.compose.foundation.layout.displayCutout
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBars
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.CheckCircleOutline
 import androidx.compose.material.icons.rounded.ErrorOutline
+import androidx.compose.material.icons.rounded.Extension
+import androidx.compose.material.icons.rounded.Security
+import androidx.compose.material.icons.rounded.Spa
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
@@ -50,22 +49,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalUriHandler
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.pm.PackageInfoCompat
-import dev.chrisbanes.haze.HazeState
-import dev.chrisbanes.haze.HazeStyle
-import dev.chrisbanes.haze.HazeTint
-import dev.chrisbanes.haze.hazeEffect
-import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -85,118 +77,482 @@ import com.sukisu.ultra.ui.util.*
 import com.sukisu.ultra.ui.util.module.LatestVersionInfo
 import com.sukisu.ultra.ui.util.reboot
 import com.sukisu.ultra.ui.util.rootAvailable
-import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Link
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme
 import top.yukonga.miuix.kmp.theme.MiuixTheme.isDynamicColor
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
-import top.yukonga.miuix.kmp.utils.overScrollVertical
-import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
+/**
+ * 赛博朋克佛教 · 电子佛龛主屏
+ * 布局完全脱离官方骨架：无顶部标题栏，改为「佛龛神坛 + 功德簿 + 参禅录」三段式。
+ */
 @Composable
 fun HomePager(
     navigator: Navigator,
     bottomInnerPadding: Dp
 ) {
     val kernelVersion = getKernelVersion()
-    val scrollBehavior = MiuixScrollBehavior()
-    val hazeState = remember { HazeState() }
-    val hazeStyle = HazeStyle(
-        backgroundColor = colorScheme.surface,
-        tint = HazeTint(colorScheme.surface.copy(0.8f))
-    )
-
     val context = LocalContext.current
     val prefs = context.getSharedPreferences("settings", Context.MODE_PRIVATE)
     val checkUpdate = prefs.getBoolean("check_update", true)
-    val themeMode = prefs.getInt("color_mode", 0)
+    val themeMode = prefs.getInt("color_mode", 5)
 
-    Scaffold(
-        topBar = {
-            TopBar(
-                scrollBehavior = scrollBehavior,
-                hazeState = hazeState,
-                hazeStyle = hazeStyle,
-            )
-        },
-        popupHost = { },
-        contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)
-    ) { innerPadding ->
-        LazyColumn(
+    val isManager = Natives.isManager
+    val ksuVersion = if (isManager) Natives.version else null
+    val lkmMode = ksuVersion?.let {
+        if (kernelVersion.isGKI()) Natives.isLkmMode else null
+    }
+    val pageState = LocalPagerState.current
+    val coroutineScope = rememberCoroutineScope()
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState())
+            .padding(horizontal = 14.dp)
+    ) {
+        Spacer(Modifier.height(12.dp))
+
+        // ── 佛龛神坛（替代原状态卡组合） ──
+        BuddhaAltar(
+            kernelVersion = kernelVersion,
+            ksuVersion = ksuVersion,
+            lkmMode = lkmMode,
+            themeMode = themeMode,
+            onClickInstall = { navigator.push(Route.Install) }
+        )
+
+        // ── 功德簿（替代右侧双卡） ──
+        Row(
             modifier = Modifier
-                .fillMaxHeight()
-                .scrollEndHaptic()
-                .overScrollVertical()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .padding(horizontal = 12.dp)
-                .hazeSource(state = hazeState),
-            contentPadding = innerPadding,
-            overscrollEffect = null,
+                .fillMaxWidth()
+                .padding(top = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            item {
-                val isManager = Natives.isManager
-                val ksuVersion = if (isManager) Natives.version else null
-                val lkmMode = ksuVersion?.let {
-                    if (kernelVersion.isGKI()) Natives.isLkmMode else null
+            MeritCard(
+                modifier = Modifier.weight(1f),
+                title = "度众生",
+                subTitle = "超级用户",
+                count = getSuperuserCount(),
+                icon = { Icon(Icons.Rounded.Security, null, tint = CyberBuddhaPalette.GoldBright, modifier = Modifier.size(20.dp)) },
+                accent = CyberBuddhaPalette.GoldBright,
+                onClick = {
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(page = 1, animationSpec = tween(easing = EaseInOut))
+                    }
                 }
-                val pageState = LocalPagerState.current
-                val coroutineScope = rememberCoroutineScope()
+            )
+            MeritCard(
+                modifier = Modifier.weight(1f),
+                title = "传法器",
+                subTitle = "模块",
+                count = getModuleCount(),
+                icon = { Icon(Icons.Rounded.Extension, null, tint = CyberBuddhaPalette.NeonCyan, modifier = Modifier.size(20.dp)) },
+                accent = CyberBuddhaPalette.NeonCyan,
+                onClick = {
+                    coroutineScope.launch {
+                        pageState.animateScrollToPage(page = 2, animationSpec = tween(easing = EaseInOut))
+                    }
+                }
+            )
+        }
 
-                Column(
-                    modifier = Modifier.padding(vertical = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    BuddhaShrineCard()
-                    if (isManager && Natives.requireNewKernel()) {
-                        WarningCard(
-                            stringResource(id = R.string.require_kernel_version)
-                                .format(ksuVersion, Natives.MINIMAL_SUPPORTED_KERNEL),
-                            themeMode
+        // 警告（内核版本/授权失败）
+        if (isManager && Natives.requireNewKernel()) {
+            WarningCard(
+                stringResource(id = R.string.require_kernel_version)
+                    .format(ksuVersion, Natives.MINIMAL_SUPPORTED_KERNEL),
+                themeMode
+            )
+        }
+        if (ksuVersion != null && !rootAvailable()) {
+            WarningCard(
+                stringResource(id = R.string.grant_root_failed),
+                themeMode
+            )
+        }
+
+        // ── 参禅录（替代原信息卡） ──
+        ZenRecordCard()
+
+        if (checkUpdate) {
+            UpdateCard(themeMode)
+        }
+        Spacer(Modifier.height(bottomInnerPadding + 16.dp))
+    }
+}
+
+/**
+ * 佛龛神坛：整块发光主卡。
+ * 无顶栏，标题/版本/状态/重启全部并入神龛。
+ */
+@Composable
+private fun BuddhaAltar(
+    kernelVersion: KernelVersion,
+    ksuVersion: Int?,
+    lkmMode: Boolean?,
+    themeMode: Int,
+    onClickInstall: () -> Unit
+) {
+    val breath = rememberInfiniteTransition(label = "altarBreath")
+    val haloAlpha by breath.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.75f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 2600, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "halo"
+    )
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(
+                width = 1.dp,
+                color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.4f),
+                shape = RoundedCornerShape(28.dp)
+            ),
+        colors = CardDefaults.defaultColors(
+            color = Color(0xE60D1022)
+        ),
+        insideMargin = PaddingValues(0.dp),
+        onClick = {
+            if (kernelVersion.isGKI()) onClickInstall()
+        },
+        showIndication = true,
+        pressFeedbackType = PressFeedbackType.Tilt
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color(0x330D1022),
+                            Color(0xAA0D1022),
+                            Color(0xF00D1022)
                         )
-                    }
-                    if (ksuVersion != null && !rootAvailable()) {
-                        WarningCard(
-                            stringResource(id = R.string.grant_root_failed),
-                            themeMode
-                        )
-                    }
-                    StatusCard(
-                        kernelVersion, ksuVersion, lkmMode,
-                        onClickInstall = {
-                            navigator.push(Route.Install)
-                        },
-                        onClickSuperuser = {
-                            coroutineScope.launch {
-                                pageState.animateScrollToPage(page = 1, animationSpec = tween(easing = EaseInOut))
-                            }
-                        },
-                        onclickModule = {
-                            coroutineScope.launch {
-                                pageState.animateScrollToPage(page = 2, animationSpec = tween(easing = EaseInOut))
-                            }
-                        },
-                        themeMode = themeMode
                     )
+                )
+                .padding(vertical = 26.dp)
+        ) {
+            // 右上角重启菜单
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(10.dp)
+            ) {
+                RebootListPopup()
+            }
 
-                    if (checkUpdate) {
-                        UpdateCard(themeMode)
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                // 状态徽章
+                when {
+                    ksuVersion != null -> {
+                        val safeMode = if (Natives.isSafeMode) " [${stringResource(id = R.string.safe_mode)}]" else ""
+                        val workingMode = when (lkmMode) {
+                            null -> ""
+                            true -> " <LKM>"
+                            else -> " <Built-in>"
+                        }
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.12f))
+                                .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                                .padding(horizontal = 12.dp, vertical = 5.dp)
+                        ) {
+                            Icon(
+                                Icons.Rounded.CheckCircleOutline,
+                                null,
+                                tint = CyberBuddhaPalette.BuddhaGold,
+                                modifier = Modifier.size(14.dp)
+                            )
+                            Text(
+                                text = "${stringResource(id = R.string.home_working)}$workingMode$safeMode",
+                                color = CyberBuddhaPalette.GoldBright,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
-                    InfoCard()
+                    kernelVersion.isGKI() -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(CyberBuddhaPalette.Cinnabar.copy(alpha = 0.12f))
+                                .border(1.dp, CyberBuddhaPalette.Cinnabar.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                                .padding(horizontal = 12.dp, vertical = 5.dp)
+                        ) {
+                            Icon(Icons.Rounded.ErrorOutline, null, tint = CyberBuddhaPalette.Cinnabar, modifier = Modifier.size(14.dp))
+                            Text(
+                                text = stringResource(R.string.home_not_installed),
+                                color = CyberBuddhaPalette.Cinnabar,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+                    else -> {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(14.dp))
+                                .background(CyberBuddhaPalette.TextMuted.copy(alpha = 0.15f))
+                                .border(1.dp, CyberBuddhaPalette.TextMuted.copy(alpha = 0.4f), RoundedCornerShape(14.dp))
+                                .padding(horizontal = 12.dp, vertical = 5.dp)
+                        ) {
+                            Icon(Icons.Rounded.ErrorOutline, null, tint = CyberBuddhaPalette.TextMuted, modifier = Modifier.size(14.dp))
+                            Text(
+                                text = stringResource(R.string.home_unsupported),
+                                color = CyberBuddhaPalette.TextMuted,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
                 }
-                Spacer(Modifier.height(bottomInnerPadding))
+
+                Spacer(Modifier.height(18.dp))
+
+                // 中央发光莲花（呼吸）
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .size(96.dp)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.30f * haloAlpha),
+                                    Color.Transparent
+                                )
+                            )
+                        )
+                ) {
+                    Icon(
+                        Icons.Rounded.Spa,
+                        null,
+                        tint = CyberBuddhaPalette.GoldBright.copy(alpha = 0.6f + 0.4f * haloAlpha),
+                        modifier = Modifier.size(64.dp)
+                    )
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                Text(
+                    text = "电子佛龛",
+                    fontSize = 26.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = 8.sp,
+                    color = CyberBuddhaPalette.GoldBright,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(Modifier.height(6.dp))
+                Text(
+                    text = "SukiSU Ultra · 内核权限管理器",
+                    fontSize = 12.sp,
+                    letterSpacing = 2.sp,
+                    color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f),
+                    textAlign = TextAlign.Center
+                )
+
+                if (ksuVersion != null) {
+                    Spacer(Modifier.height(10.dp))
+                    Text(
+                        text = "版本 v$ksuVersion",
+                        fontSize = 13.sp,
+                        fontWeight = FontWeight.Medium,
+                        color = CyberBuddhaPalette.TextSecondary
+                    )
+                }
             }
         }
+    }
+}
+
+/** 功德簿卡：数字 + 佛语标签 */
+@Composable
+private fun MeritCard(
+    modifier: Modifier = Modifier,
+    title: String,
+    subTitle: String,
+    count: Int,
+    accent: Color,
+    icon: @Composable () -> Unit,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = modifier
+            .border(
+                width = 1.dp,
+                color = accent.copy(alpha = 0.3f),
+                shape = RoundedCornerShape(22.dp)
+            ),
+        colors = CardDefaults.defaultColors(
+            color = Color(0xB30D1022)
+        ),
+        insideMargin = PaddingValues(0.dp),
+        onClick = onClick,
+        showIndication = true,
+        pressFeedbackType = PressFeedbackType.Tilt
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                icon()
+                Text(
+                    text = title,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = accent
+                )
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = count.toString(),
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold,
+                color = CyberBuddhaPalette.GoldBright
+            )
+            Spacer(Modifier.height(2.dp))
+            Text(
+                text = subTitle,
+                fontSize = 11.sp,
+                color = CyberBuddhaPalette.TextMuted
+            )
+        }
+    }
+}
+
+/** 参禅录：系统信息禅意两栏 */
+@Composable
+private fun ZenRecordCard() {
+    val manualHookText = stringResource(R.string.manual_hook)
+    val inlineHookText = stringResource(R.string.inline_hook)
+    val tracepointHookText = stringResource(R.string.tracepoint_hook)
+    val unknownHookText = stringResource(R.string.selinux_status_unknown)
+    val susfsInfo = rememberSusfsInfo(manualHookText, inlineHookText)
+    val isSusfsSupported = susfsInfo.status == SusfsStatus.Supported
+    val hookTypeLabel = remember(manualHookText, inlineHookText, tracepointHookText) {
+        val localized = when (val rawType = Natives.getHookType()) {
+            "Manual" -> manualHookText
+            "Tracepoint" -> tracepointHookText
+            else -> rawType
+        }
+        localized.ifBlank { unknownHookText }
+    }
+    val context = LocalContext.current
+    val uname = Os.uname()
+    val managerVersion = getManagerVersion(context)
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 14.dp)
+            .border(1.dp, CyberBuddhaPalette.NeonViolet.copy(alpha = 0.25f), RoundedCornerShape(24.dp)),
+        colors = CardDefaults.defaultColors(
+            color = Color(0xB30D1022)
+        ),
+        insideMargin = PaddingValues(0.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 18.dp, vertical = 18.dp)
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Icon(Icons.Rounded.Spa, null, tint = CyberBuddhaPalette.NeonViolet, modifier = Modifier.size(16.dp))
+                Text(
+                    text = "参禅 · 系统实相",
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    letterSpacing = 2.sp,
+                    color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.95f)
+                )
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .height(1.dp)
+                        .background(CyberBuddhaPalette.NeonViolet.copy(alpha = 0.2f))
+                )
+            }
+
+            Spacer(Modifier.height(14.dp))
+
+            ZenRow("内核", uname.release)
+            ZenRow("管理器", "${managerVersion.first} (${managerVersion.second})")
+            if (isSusfsSupported) {
+                ZenRow("SusFS", susfsInfo.detail)
+            } else {
+                ZenRow("钩子", hookTypeLabel)
+            }
+            ZenRow("SELinux", getSELinuxStatus())
+            Spacer(Modifier.height(6.dp))
+            Text(
+                text = Build.FINGERPRINT,
+                fontSize = 10.sp,
+                color = CyberBuddhaPalette.TextMuted.copy(alpha = 0.7f),
+                lineHeight = 14.sp
+            )
+        }
+    }
+}
+
+/** 参禅行：金刚标签 + 值 */
+@Composable
+private fun ZenRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 7.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .clip(RoundedCornerShape(10.dp))
+                .background(CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.1f))
+                .border(1.dp, CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
+                .padding(horizontal = 10.dp, vertical = 4.dp)
+        ) {
+            Text(
+                text = label,
+                fontSize = 11.sp,
+                color = CyberBuddhaPalette.BuddhaGold,
+                fontWeight = FontWeight.Medium
+            )
+        }
+        Spacer(Modifier.size(12.dp))
+        Text(
+            text = value,
+            fontSize = 13.sp,
+            lineHeight = 18.sp,
+            color = CyberBuddhaPalette.TextSecondary,
+            modifier = Modifier.weight(1f)
+        )
     }
 }
 
@@ -265,340 +621,6 @@ fun RebootDropdownItem(
 }
 
 @Composable
-private fun TopBar(
-    scrollBehavior: ScrollBehavior,
-    hazeState: HazeState,
-    hazeStyle: HazeStyle,
-) {
-    TopAppBar(
-        modifier = Modifier.hazeEffect(hazeState) {
-            style = hazeStyle
-            blurRadius = 30.dp
-            noiseFactor = 0f
-        },
-        color = Color.Transparent,
-        title = stringResource(R.string.app_name),
-        actions = {
-            RebootListPopup(
-                modifier = Modifier.padding(end = 16.dp),
-            )
-        },
-        scrollBehavior = scrollBehavior
-    )
-}
-
-@Composable
-fun BuddhaShrineCard() {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(
-                width = 1.dp,
-                color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.35f),
-                shape = RoundedCornerShape(24.dp)
-            ),
-        colors = CardDefaults.defaultColors(
-            color = Color(0xCC0D1022)
-        ),
-        insideMargin = PaddingValues(0.dp),
-    ) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(168.dp)
-                .clip(RoundedCornerShape(24.dp))
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.buddha_bg),
-                contentDescription = null,
-                modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0x6605060D),
-                                Color(0x8C05060D),
-                                Color(0xE605060D)
-                            )
-                        )
-                    )
-            )
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 20.dp, vertical = 18.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-                Text(
-                    text = "电子佛龛",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = CyberBuddhaPalette.GoldBright,
-                    letterSpacing = 6.sp
-                )
-                Spacer(Modifier.height(8.dp))
-                Text(
-                    text = "赛博佛系 · 内核权限管理器",
-                    fontSize = 13.sp,
-                    color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.95f),
-                    letterSpacing = 2.sp
-                )
-                Spacer(Modifier.height(14.dp))
-                Text(
-                    text = "◇ 观自在 · 得大自在 ◇",
-                    fontSize = 11.sp,
-                    color = CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.75f),
-                    letterSpacing = 3.sp
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun StatusCard(
-    kernelVersion: KernelVersion,
-    ksuVersion: Int?,
-    lkmMode: Boolean?,
-    onClickInstall: () -> Unit = {},
-    onClickSuperuser: () -> Unit = {},
-    onclickModule: () -> Unit = {},
-    themeMode: Int,
-) {
-    Column(
-        modifier = Modifier
-    ) {
-        when {
-            ksuVersion != null -> {
-                val safeMode = when {
-                    Natives.isSafeMode -> " [${stringResource(id = R.string.safe_mode)}]"
-                    else -> ""
-                }
-
-                val workingMode = when (lkmMode) {
-                    null -> ""
-                    true -> " <LKM>"
-                    else -> " <Built-in>"
-                }
-
-                val workingText = "${stringResource(id = R.string.home_working)}$workingMode$safeMode"
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(IntrinsicSize.Min),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight(),
-                        colors = CardDefaults.defaultColors(
-                            color = when {
-                                isDynamicColor -> colorScheme.secondaryContainer
-                                isInDarkTheme(themeMode) -> Color(0xCC161B33)
-                                else -> Color(0xFFDFFAE4)
-                            }
-                        ),
-                        onClick = {
-                            if (kernelVersion.isGKI()) onClickInstall()
-                        },
-                        showIndication = true,
-                        pressFeedbackType = PressFeedbackType.Tilt
-                    ) {
-                        Box(
-                            modifier = Modifier.fillMaxSize()
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .offset(38.dp, 45.dp),
-                                contentAlignment = Alignment.BottomEnd
-                            ) {
-                                Icon(
-                                    modifier = Modifier.size(170.dp),
-                                    imageVector = Icons.Rounded.CheckCircleOutline,
-                                    tint = if (isDynamicColor) {
-                                        colorScheme.primary.copy(alpha = 0.8f)
-                                    } else {
-                                        CyberBuddhaPalette.BuddhaGold.copy(alpha = 0.85f)
-                                    },
-                                    contentDescription = null
-                                )
-                            }
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .padding(all = 16.dp)
-                            ) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = workingText,
-                                    fontSize = 20.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
-                                        CyberBuddhaPalette.GoldBright
-                                    } else {
-                                        colorScheme.onSurface
-                                    }
-                                )
-                                Spacer(Modifier.height(2.dp))
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(R.string.home_working_version, ksuVersion),
-                                    fontSize = 14.sp,
-                                    fontWeight = FontWeight.Medium,
-                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
-                                        CyberBuddhaPalette.TextSecondary
-                                    } else {
-                                        colorScheme.onSurfaceVariantSummary
-                                    }
-                                )
-                            }
-                        }
-                    }
-                    Column(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                    ) {
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            insideMargin = PaddingValues(16.dp),
-                            onClick = { onClickSuperuser() },
-                            showIndication = true,
-                            pressFeedbackType = PressFeedbackType.Tilt
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(R.string.superuser),
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 15.sp,
-                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
-                                        CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
-                                    } else {
-                                        colorScheme.onSurfaceVariantSummary
-                                    },
-                                )
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = getSuperuserCount().toString(),
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
-                                        CyberBuddhaPalette.GoldBright
-                                    } else {
-                                        colorScheme.onSurface
-                                    },
-                                )
-                            }
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
-                            insideMargin = PaddingValues(16.dp),
-                            onClick = { onclickModule() },
-                            showIndication = true,
-                            pressFeedbackType = PressFeedbackType.Tilt
-                        ) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = stringResource(R.string.module),
-                                    fontWeight = FontWeight.Medium,
-                                    fontSize = 15.sp,
-                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
-                                        CyberBuddhaPalette.NeonCyan.copy(alpha = 0.9f)
-                                    } else {
-                                        colorScheme.onSurfaceVariantSummary
-                                    },
-                                )
-                                Text(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    text = getModuleCount().toString(),
-                                    fontSize = 26.sp,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = if (!isDynamicColor && isInDarkTheme(themeMode)) {
-                                        CyberBuddhaPalette.GoldBright
-                                    } else {
-                                        colorScheme.onSurface
-                                    },
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            kernelVersion.isGKI() -> {
-                Card(
-                    onClick = {
-                        if (kernelVersion.isGKI()) onClickInstall()
-                    },
-                    showIndication = true,
-                    pressFeedbackType = PressFeedbackType.Sink
-                ) {
-                    BasicComponent(
-                        title = stringResource(R.string.home_not_installed),
-                        summary = stringResource(R.string.home_click_to_install),
-                        startAction = {
-                            Icon(
-                                Icons.Rounded.ErrorOutline,
-                                stringResource(R.string.home_not_installed),
-                                modifier = Modifier
-                                    .padding(end = 16.dp),
-                                tint = colorScheme.onBackground,
-                            )
-                        }
-                    )
-                }
-            }
-
-            else -> {
-                Card(
-                    onClick = {
-                        if (kernelVersion.isGKI()) onClickInstall()
-                    },
-                    showIndication = true,
-                    pressFeedbackType = PressFeedbackType.Sink
-                ) {
-                    BasicComponent(
-                        title = stringResource(R.string.home_unsupported),
-                        summary = stringResource(R.string.home_unsupported_reason),
-                        startAction = {
-                            Icon(
-                                Icons.Rounded.ErrorOutline,
-                                stringResource(R.string.home_unsupported),
-                                modifier = Modifier
-                                    .padding(end = 16.dp),
-                                tint = colorScheme.onBackground,
-                            )
-                        }
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
 fun WarningCard(
     message: String,
     themeMode: Int,
@@ -606,6 +628,7 @@ fun WarningCard(
     onClick: (() -> Unit)? = null,
 ) {
     Card(
+        modifier = Modifier.padding(top = 14.dp),
         onClick = {
             onClick?.invoke()
         },
@@ -628,85 +651,6 @@ fun WarningCard(
                 text = message,
                 color = if (isDynamicColor) colorScheme.onErrorContainer else Color(0xFFF72727),
                 fontSize = 14.sp
-            )
-        }
-    }
-}
-
-@Composable
-private fun InfoCard() {
-    val manualHookText = stringResource(R.string.manual_hook)
-    val inlineHookText = stringResource(R.string.inline_hook)
-    val tracepointHookText = stringResource(R.string.tracepoint_hook)
-    val unknownHookText = stringResource(R.string.selinux_status_unknown)
-    val susfsInfo = rememberSusfsInfo(manualHookText, inlineHookText)
-    val isSusfsSupported = susfsInfo.status == SusfsStatus.Supported
-    val hookTypeLabel = remember(manualHookText, inlineHookText, tracepointHookText) {
-        val localized = when (val rawType = Natives.getHookType()) {
-            "Manual" -> manualHookText
-            "Tracepoint" -> tracepointHookText
-            else -> rawType
-        }
-        localized.ifBlank { unknownHookText }
-    }
-
-    @Composable
-    fun InfoText(
-        title: String,
-        content: String,
-        bottomPadding: Dp = 24.dp
-    ) {
-        Text(
-            text = title,
-            fontSize = MiuixTheme.textStyles.headline1.fontSize,
-            fontWeight = FontWeight.Medium,
-            color = colorScheme.onSurface
-        )
-        Text(
-            text = content,
-            fontSize = MiuixTheme.textStyles.body2.fontSize,
-            color = colorScheme.onSurfaceVariantSummary,
-            modifier = Modifier.padding(top = 2.dp, bottom = bottomPadding)
-        )
-    }
-
-    val context = LocalContext.current
-    val uname = Os.uname()
-    val managerVersion = getManagerVersion(context)
-
-    Card {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp)
-        ) {
-            InfoText(
-                title = stringResource(R.string.home_kernel),
-                content = uname.release
-            )
-            InfoText(
-                title = stringResource(R.string.home_manager_version),
-                content = "${managerVersion.first} (${managerVersion.second})"
-            )
-            if (isSusfsSupported) {
-                InfoText(
-                    title = stringResource(R.string.home_susfs_version),
-                    content = susfsInfo.detail
-                )
-            } else {
-                InfoText(
-                    title = stringResource(R.string.hook_type),
-                    content = hookTypeLabel
-                )
-            }
-            InfoText(
-                title = stringResource(R.string.home_selinux_status),
-                content = getSELinuxStatus(),
-            )
-            InfoText(
-                title = stringResource(R.string.home_fingerprint),
-                content = Build.FINGERPRINT,
-                bottomPadding = 0.dp
             )
         }
     }

@@ -113,7 +113,6 @@ import kotlinx.coroutines.withContext
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ksuApp
-import com.sukisu.ultra.ui.component.CyberBackdrop
 import com.sukisu.ultra.ui.component.ConfirmResult
 import com.sukisu.ultra.ui.component.RebootListPopup
 import com.sukisu.ultra.ui.component.SearchBox
@@ -557,8 +556,9 @@ fun ModulePager(
     )
 
     CyberBackdrop {
-Scaffold(containerColor = Color.Transparent,
-        topBar = {
+        Scaffold(
+            containerColor = Color.Transparent,
+            topBar = {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -675,7 +675,6 @@ Scaffold(containerColor = Color.Transparent,
                     )
                 }
             }
-        }
         },
         floatingActionButton = {
             if (!hideInstallButton) {
@@ -884,6 +883,7 @@ Scaffold(containerColor = Color.Transparent,
                             .fillMaxHeight()
                             .scrollEndHaptic()
                             .overScrollVertical()
+                            .nestedScroll(scrollBehavior.nestedScrollConnection)
                             .nestedScroll(nestedScrollConnection)
                             .hazeSource(state = hazeState),
                         scope = scope,
@@ -924,6 +924,7 @@ Scaffold(containerColor = Color.Transparent,
                 }
             }
         }
+    }
     }
     if (showShortcutTypeDialog.value) {
         SuperDialog(

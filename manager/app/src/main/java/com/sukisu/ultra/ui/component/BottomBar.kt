@@ -2,6 +2,7 @@ package com.sukisu.ultra.ui.component
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateFloatAsState
 import androidx.compose.animation.core.EaseInOut
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -45,6 +46,7 @@ import com.sukisu.ultra.ui.LocalPagerState
 import com.sukisu.ultra.ui.theme.CyberBuddhaPalette
 import com.sukisu.ultra.ui.util.rootAvailable
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Text
 
 /**
  * 赛博朋克佛教 · 法轮导航栏
@@ -97,7 +99,7 @@ fun BottomBar(
                     animationSpec = tween(durationMillis = 260, easing = EaseInOut),
                     label = "navTint"
                 )
-                val bgAlpha by animateColorAsState(
+                val bgAlpha by animateFloatAsState(
                     targetValue = if (selected) 1f else 0f,
                     animationSpec = tween(durationMillis = 260, easing = EaseInOut),
                     label = "navBg"
@@ -126,7 +128,7 @@ fun BottomBar(
                         modifier = Modifier.size(22.dp)
                     )
                     Spacer(Modifier.height(3.dp))
-                    androidx.compose.material3.Text(
+                    Text(
                         text = stringResource(destination.label),
                         color = tint,
                         fontSize = 10.sp,

@@ -61,6 +61,7 @@ import dev.chrisbanes.haze.hazeEffect
 import dev.chrisbanes.haze.hazeSource
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
+import com.sukisu.ultra.ui.component.CyberBackdrop
 import com.sukisu.ultra.ui.component.KsuIsValid
 import com.sukisu.ultra.ui.component.SendLogDialog
 import com.sukisu.ultra.ui.component.UninstallDialog
@@ -96,7 +97,6 @@ fun SettingPager(
     navigator: Navigator,
     bottomInnerPadding: Dp
 ) {
-    val scrollBehavior = MiuixScrollBehavior()
     val hazeState = remember { HazeState() }
     val hazeStyle = HazeStyle(
         backgroundColor = colorScheme.surface,
@@ -105,7 +105,8 @@ fun SettingPager(
 
     val isKpmAvailable = rememberKpmAvailable()
 
-    Scaffold(
+    CyberBackdrop {
+Scaffold(containerColor = Color.Transparent,
         topBar = {
             Column(
                 modifier = Modifier
@@ -131,6 +132,7 @@ fun SettingPager(
                     color = CyberBuddhaPalette.NeonViolet.copy(alpha = 0.9f)
                 )
             }
+        }
         },
         popupHost = { },
         contentWindowInsets = WindowInsets.systemBars.add(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)
@@ -147,7 +149,6 @@ fun SettingPager(
                 .fillMaxHeight()
                 .scrollEndHaptic()
                 .overScrollVertical()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
                 .hazeSource(state = hazeState)
                 .padding(horizontal = 12.dp),
             contentPadding = innerPadding,

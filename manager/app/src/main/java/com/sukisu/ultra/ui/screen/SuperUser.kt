@@ -77,6 +77,7 @@ import kotlinx.coroutines.launch
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ksuApp
+import com.sukisu.ultra.ui.component.CyberBackdrop
 import com.sukisu.ultra.ui.component.AppIconImage
 import com.sukisu.ultra.ui.component.SearchBox
 import com.sukisu.ultra.ui.component.SearchPager
@@ -151,7 +152,8 @@ fun SuperUserPager(
         tint = HazeTint(colorScheme.surface.copy(0.8f))
     )
 
-    Scaffold(
+    CyberBackdrop {
+Scaffold(containerColor = Color.Transparent,
         topBar = {
             Column(
                 modifier = Modifier
@@ -229,6 +231,7 @@ fun SuperUserPager(
                     }
                 }
             }
+        }
         },
         popupHost = {
             val filteredApps = remember(viewModel.appList.value) {
@@ -360,7 +363,6 @@ fun SuperUserPager(
                             .fillMaxHeight()
                             .scrollEndHaptic()
                             .overScrollVertical()
-                            .nestedScroll(scrollBehavior.nestedScrollConnection)
                             .hazeSource(state = hazeState),
                         contentPadding = PaddingValues(
                             top = innerPadding.calculateTopPadding() + boxHeight.value + 6.dp,

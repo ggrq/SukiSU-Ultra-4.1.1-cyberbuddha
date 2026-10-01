@@ -113,6 +113,7 @@ import kotlinx.coroutines.withContext
 import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.ksuApp
+import com.sukisu.ultra.ui.component.CyberBackdrop
 import com.sukisu.ultra.ui.component.ConfirmResult
 import com.sukisu.ultra.ui.component.RebootListPopup
 import com.sukisu.ultra.ui.component.SearchBox
@@ -555,7 +556,8 @@ fun ModulePager(
         tint = HazeTint(colorScheme.surface.copy(0.8f))
     )
 
-    Scaffold(
+    CyberBackdrop {
+Scaffold(containerColor = Color.Transparent,
         topBar = {
             Column(
                 modifier = Modifier
@@ -673,6 +675,7 @@ fun ModulePager(
                     )
                 }
             }
+        }
         },
         floatingActionButton = {
             if (!hideInstallButton) {
@@ -881,7 +884,6 @@ fun ModulePager(
                             .fillMaxHeight()
                             .scrollEndHaptic()
                             .overScrollVertical()
-                            .nestedScroll(scrollBehavior.nestedScrollConnection)
                             .nestedScroll(nestedScrollConnection)
                             .hazeSource(state = hazeState),
                         scope = scope,

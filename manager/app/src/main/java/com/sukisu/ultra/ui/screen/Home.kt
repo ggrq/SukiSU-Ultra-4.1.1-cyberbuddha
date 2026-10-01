@@ -69,6 +69,7 @@ import com.sukisu.ultra.Natives
 import com.sukisu.ultra.R
 import com.sukisu.ultra.getKernelVersion
 import com.sukisu.ultra.ui.LocalPagerState
+import com.sukisu.ultra.ui.component.CyberBackdrop
 import com.sukisu.ultra.ui.component.DropdownItem
 import com.sukisu.ultra.ui.component.rememberConfirmDialog
 import com.sukisu.ultra.ui.navigation3.Navigator
@@ -110,13 +111,14 @@ fun HomePager(
     val pageState = LocalPagerState.current
     val coroutineScope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(horizontal = 14.dp)
-    ) {
-        Spacer(Modifier.height(12.dp))
+    CyberBackdrop(useShrine = true) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 14.dp)
+        ) {
+            Spacer(Modifier.height(12.dp))
 
         // ── 佛龛神坛（替代原状态卡组合） ──
         BuddhaAltar(
@@ -184,6 +186,7 @@ fun HomePager(
             UpdateCard(themeMode)
         }
         Spacer(Modifier.height(bottomInnerPadding + 16.dp))
+        }
     }
 }
 
